@@ -5,14 +5,14 @@ package proto;
 //  protoc --go_out=. --go-grpc_out=. message.proto
 //  protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. message.proto
 message Message {
-  int32 UserID = 1;
+  string UserID = 1;
   bool IsBid = 2; // Is query or is bid
   int32 Price = 3;
 }
 
 message Result {
   bool Success = 1;
-  int32 UserID = 2;
+  string UserID = 2;
   int32 price = 3;
   int64 TimeLeft = 4;
   bool IsDone = 5;
