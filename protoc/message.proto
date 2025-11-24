@@ -7,22 +7,18 @@ package proto;
 message Message {
   int32 UserID = 1;
   bool IsBid = 2; // Is query or is bid
-  optional int32 Price = 3;
+  int32 Price = 3;
 }
 
 message Result {
   bool Success = 1;
-  optional int32 UserID = 2;
-  optional int32 price = 3;
-  optional int64 TimeLeft = 4;
-  optional bool IsDone = 5;
-}
-
-message Response {
-  bool Success = 1;
+  int32 UserID = 2;
+  int32 price = 3;
+  int64 TimeLeft = 4;
+  bool IsDone = 5;
 }
 
 service AuctionService{
   rpc AuctionStream(stream Message) returns (stream Result);
-  rpc WatcherStream(stream Message) returns (stream Response);
+  rpc WatcherStream(stream Message) returns (stream Message);
 }
