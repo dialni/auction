@@ -3,13 +3,20 @@ option go_package = ".";
 package proto;
 // Build command:
 //  protoc --go_out=. --go-grpc_out=. message.proto
-//  protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. Message.proto
+//  protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. message.proto
 message Message {
   int64 Timestamp = 1;
   int32 UserID = 2;
   int32 AuctionID = 3;
   optional int32 Price = 4;
   bool IsBid = 6; // Is query or is bid
+}
+
+message Result {
+  bool IsDone = 1;
+  int32 WinnerID = 2;
+  int32 price = 3;
+  optional int64 TimeLeft = 4;
 }
 
 message Response {
