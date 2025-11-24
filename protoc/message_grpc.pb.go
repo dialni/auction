@@ -20,13 +20,15 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	AuctionService_AuctionStream_FullMethodName = "/proto.AuctionService/AuctionStream"
+	AuctionService_WatcherStream_FullMethodName = "/proto.AuctionService/WatcherStream"
 )
 
 // AuctionServiceClient is the client API for AuctionService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuctionServiceClient interface {
-	AuctionStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Message, Response], error)
+	AuctionStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Message, Result], error)
+	WatcherStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Message, Response], error)
 }
 
 type auctionServiceClient struct {
@@ -37,9 +39,22 @@ func NewAuctionServiceClient(cc grpc.ClientConnInterface) AuctionServiceClient {
 	return &auctionServiceClient{cc}
 }
 
-func (c *auctionServiceClient) AuctionStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Message, Response], error) {
+func (c *auctionServiceClient) AuctionStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Message, Result], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &AuctionService_ServiceDesc.Streams[0], AuctionService_AuctionStream_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[Message, Result]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuctionService_AuctionStreamClient = grpc.BidiStreamingClient[Message, Result]
+
+func (c *auctionServiceClient) WatcherStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Message, Response], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &AuctionService_ServiceDesc.Streams[1], AuctionService_WatcherStream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -48,13 +63,14 @@ func (c *auctionServiceClient) AuctionStream(ctx context.Context, opts ...grpc.C
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type AuctionService_AuctionStreamClient = grpc.BidiStreamingClient[Message, Response]
+type AuctionService_WatcherStreamClient = grpc.BidiStreamingClient[Message, Response]
 
 // AuctionServiceServer is the server API for AuctionService service.
 // All implementations must embed UnimplementedAuctionServiceServer
 // for forward compatibility.
 type AuctionServiceServer interface {
-	AuctionStream(grpc.BidiStreamingServer[Message, Response]) error
+	AuctionStream(grpc.BidiStreamingServer[Message, Result]) error
+	WatcherStream(grpc.BidiStreamingServer[Message, Response]) error
 	mustEmbedUnimplementedAuctionServiceServer()
 }
 
@@ -65,8 +81,11 @@ type AuctionServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuctionServiceServer struct{}
 
-func (UnimplementedAuctionServiceServer) AuctionStream(grpc.BidiStreamingServer[Message, Response]) error {
+func (UnimplementedAuctionServiceServer) AuctionStream(grpc.BidiStreamingServer[Message, Result]) error {
 	return status.Errorf(codes.Unimplemented, "method AuctionStream not implemented")
+}
+func (UnimplementedAuctionServiceServer) WatcherStream(grpc.BidiStreamingServer[Message, Response]) error {
+	return status.Errorf(codes.Unimplemented, "method WatcherStream not implemented")
 }
 func (UnimplementedAuctionServiceServer) mustEmbedUnimplementedAuctionServiceServer() {}
 func (UnimplementedAuctionServiceServer) testEmbeddedByValue()                        {}
@@ -90,11 +109,18 @@ func RegisterAuctionServiceServer(s grpc.ServiceRegistrar, srv AuctionServiceSer
 }
 
 func _AuctionService_AuctionStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(AuctionServiceServer).AuctionStream(&grpc.GenericServerStream[Message, Response]{ServerStream: stream})
+	return srv.(AuctionServiceServer).AuctionStream(&grpc.GenericServerStream[Message, Result]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type AuctionService_AuctionStreamServer = grpc.BidiStreamingServer[Message, Response]
+type AuctionService_AuctionStreamServer = grpc.BidiStreamingServer[Message, Result]
+
+func _AuctionService_WatcherStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AuctionServiceServer).WatcherStream(&grpc.GenericServerStream[Message, Response]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuctionService_WatcherStreamServer = grpc.BidiStreamingServer[Message, Response]
 
 // AuctionService_ServiceDesc is the grpc.ServiceDesc for AuctionService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -107,6 +133,12 @@ var AuctionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "AuctionStream",
 			Handler:       _AuctionService_AuctionStream_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "WatcherStream",
+			Handler:       _AuctionService_WatcherStream_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
