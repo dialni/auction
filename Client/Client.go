@@ -21,6 +21,7 @@ func ListenForMessages(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 		if err != nil {
 			log.Fatalf("[CLIENT]: Lost connection to server.")
 		}
+		log.Println(msg)
 
 	}
 }
@@ -58,33 +59,33 @@ func main() {
 				if err != nil {
 					break
 				}
-				Bid(int32(bid), username)
+				Bid(int32(bid), username, stream)
 			}
 			break
 
 		case "Result":
-			Result()
+			Result(stream)
 			break
 		}
 	}
 }
 
-func Bid(bid int32, username string) {
+func Bid(bid int32, username string, stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 	var msg p.Message
 	msg = p.Message{
-		UserID: username,
-		IsBid:  true,
-		Price:  bid,
+		Username: username,
+		IsBid:    true,
+		Price:    bid,
 	}
-	stream.send(&msg)
+	stream.Send(&msg)
 }
 
-func Result() {
+func Result(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 	var msg p.Message
 	msg = p.Message{
-		UserID: "",
-		IsBid:  false,
-		Price:  0,
+		Username: "",
+		IsBid:    false,
+		Price:    0,
 	}
-	stream.send(&msg)
+	stream.Send(&msg)
 }
