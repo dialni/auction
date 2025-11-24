@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"os/exec"
 	"sync"
+	"syscall"
 	"time"
 
 	"google.golang.org/grpc"
@@ -43,7 +46,7 @@ func main() {
 	var err error
 
 	// Dynamically assign services to ports from 5001 to 5003 (3 active nodes, + critical zone on 5000)
-	for i := 5000; i < 5004; i++ {
+	for i := 5000; i < 5002; i++ {
 		s.ServerPort++
 		lis, err = net.Listen("tcp", fmt.Sprintf(":%d", s.ServerPort))
 		if err != nil {
@@ -86,7 +89,25 @@ func (s *Server) StartAuction() {
 	}
 }
 
-func (s *Server) StartProcess() {}
+func (s *Server) StartProcess() {
+	cmd, err := exec.LookPath("sleep")
+	if err != nil {
+		panic(err)
+	}
+	attr := &os.ProcAttr{
+		Sys: &syscall.SysProcAttr{
+			Setpgid: true,
+		},
+	}
+	process, err := os.StartProcess(cmd, []string{cmd, "20s"}, attr)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(process.Pid)
+	process.Release()
+	//time.Sleep(20 * time.Second)
+	return
+}
 
 func (s *Server) Watcher() {}
 
@@ -110,8 +131,12 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 		log.Printf("Received Auction Request: %v", req)
 		s.CurrentAuction.Lock()
 		if req.IsBid {
-			if s.CurrentAuction.HighestBid < req.Price {
-				s.CurrentAuction.HighestBid = req.Price //update highest bidder (max is int32 limit)
+			if !s.CurrentAuction.IsDone {
+				if s.CurrentAuction.HighestBid < req.Price {
+					s.CurrentAuction.HighestBid = req.Price //update highest bidder (max is int32 limit)
+				}
+			} else {
+				break
 			}
 		} else {
 			if s.CurrentAuction.IsDone {

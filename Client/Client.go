@@ -46,21 +46,21 @@ func main() {
 	in := bufio.NewScanner(os.Stdin)
 	in.Scan()
 	username := in.Text()
-
+	fmt.Println("Commands available:\n - Result\n - Bid")
 	//Start listening for commands
 	for {
 		in.Scan()
 		switch in.Text() {
 		case "Bid":
 			log.Println("State your bid!")
-			for {
-				in.Scan()
-				bid, err := strconv.Atoi(in.Text())
-				if err != nil {
-					break
-				}
-				Bid(int32(bid), username, stream)
+			in.Scan()
+			bid, err := strconv.Atoi(in.Text())
+			if err != nil || bid < 1 {
+				log.Println("Enter a valid bid, use only positive integers.")
+				continue
 			}
+			Bid(int32(bid), username, stream)
+			log.Println("Sending bid ")
 			break
 
 		case "Result":
