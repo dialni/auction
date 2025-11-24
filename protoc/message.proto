@@ -1,0 +1,23 @@
+syntax = "proto3";
+option go_package = ".";
+package proto;
+// Build command:
+//  protoc --go_out=. --go-grpc_out=. message.proto
+//  protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. Message.proto
+message Message {
+  int64 Timestamp = 1;
+  int32 UserID = 2;
+  int32 AuctionID = 3;
+  optional int32 Price = 4;
+  bool IsBid = 6; // Is query or is bid
+}
+
+message Response {
+  bool Success = 1;
+  optional int32 Price = 2;
+}
+
+service AuctionService{
+  rpc AuctionStream(stream Message) returns (stream Response);
+  rpc WatcherStream(stream Message) returns (stream Response);
+}
