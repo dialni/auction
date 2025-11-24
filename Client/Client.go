@@ -27,7 +27,7 @@ func ListenForMessages(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 }
 
 func main() {
-	conn, err := grpc.NewClient(":8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(":5000", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}

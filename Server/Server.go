@@ -36,7 +36,7 @@ type BrokerMessage struct {
 }
 
 func main() {
-	s := &Server{}
+	s := &Server{ServerPort: 4999}
 
 	grpcServer := grpc.NewServer()
 	var lis net.Listener
@@ -104,8 +104,10 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 	for {
 		req, err := stream.Recv()
 		if err != nil {
-			log.Println("AuctionStream Recv error:", err)
+			log.Println("Client disconnected")
+			return nil
 		}
+		log.Printf("Received Auction Request: %v", req)
 		s.CurrentAuction.Lock()
 		if req.IsBid {
 			if s.CurrentAuction.HighestBid < req.Price {
