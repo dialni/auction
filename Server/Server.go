@@ -117,7 +117,7 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 				msg = p.Result{
 					Success:  true,
 					IsDone:   true,
-					UserID:   s.CurrentAuction.TopBidder,
+					Username: s.CurrentAuction.TopBidder,
 					Price:    s.CurrentAuction.HighestBid,
 					TimeLeft: 0,
 				}
@@ -126,7 +126,7 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 				//spit out highest bid
 				msg = p.Result{
 					Success:  true,
-					UserID:   s.CurrentAuction.TopBidder,
+					Username: s.CurrentAuction.TopBidder,
 					Price:    s.CurrentAuction.HighestBid,
 					TimeLeft: s.CurrentAuction.TimeLeft,
 					IsDone:   false,
