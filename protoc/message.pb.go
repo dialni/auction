@@ -27,7 +27,7 @@ const (
 //	protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. message.proto
 type Message struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserID        int32                  `protobuf:"varint,1,opt,name=UserID,proto3" json:"UserID,omitempty"`
+	Username      string                 `protobuf:"bytes,1,opt,name=Username,proto3" json:"Username,omitempty"`
 	IsBid         bool                   `protobuf:"varint,2,opt,name=IsBid,proto3" json:"IsBid,omitempty"` // Is query or is bid
 	Price         int32                  `protobuf:"varint,3,opt,name=Price,proto3" json:"Price,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -64,11 +64,11 @@ func (*Message) Descriptor() ([]byte, []int) {
 	return file_message_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Message) GetUserID() int32 {
+func (x *Message) GetUsername() string {
 	if x != nil {
-		return x.UserID
+		return x.Username
 	}
-	return 0
+	return ""
 }
 
 func (x *Message) GetIsBid() bool {
@@ -88,7 +88,7 @@ func (x *Message) GetPrice() int32 {
 type Result struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=Success,proto3" json:"Success,omitempty"`
-	UserID        int32                  `protobuf:"varint,2,opt,name=UserID,proto3" json:"UserID,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=Username,proto3" json:"Username,omitempty"`
 	Price         int32                  `protobuf:"varint,3,opt,name=price,proto3" json:"price,omitempty"`
 	TimeLeft      int64                  `protobuf:"varint,4,opt,name=TimeLeft,proto3" json:"TimeLeft,omitempty"`
 	IsDone        bool                   `protobuf:"varint,5,opt,name=IsDone,proto3" json:"IsDone,omitempty"`
@@ -133,11 +133,11 @@ func (x *Result) GetSuccess() bool {
 	return false
 }
 
-func (x *Result) GetUserID() int32 {
+func (x *Result) GetUsername() string {
 	if x != nil {
-		return x.UserID
+		return x.Username
 	}
-	return 0
+	return ""
 }
 
 func (x *Result) GetPrice() int32 {
@@ -165,14 +165,14 @@ var File_message_proto protoreflect.FileDescriptor
 
 const file_message_proto_rawDesc = "" +
 	"\n" +
-	"\rmessage.proto\x12\x05proto\"M\n" +
-	"\aMessage\x12\x16\n" +
-	"\x06UserID\x18\x01 \x01(\x05R\x06UserID\x12\x14\n" +
+	"\rmessage.proto\x12\x05proto\"Q\n" +
+	"\aMessage\x12\x1a\n" +
+	"\bUsername\x18\x01 \x01(\tR\bUsername\x12\x14\n" +
 	"\x05IsBid\x18\x02 \x01(\bR\x05IsBid\x12\x14\n" +
-	"\x05Price\x18\x03 \x01(\x05R\x05Price\"\x84\x01\n" +
+	"\x05Price\x18\x03 \x01(\x05R\x05Price\"\x88\x01\n" +
 	"\x06Result\x12\x18\n" +
-	"\aSuccess\x18\x01 \x01(\bR\aSuccess\x12\x16\n" +
-	"\x06UserID\x18\x02 \x01(\x05R\x06UserID\x12\x14\n" +
+	"\aSuccess\x18\x01 \x01(\bR\aSuccess\x12\x1a\n" +
+	"\bUsername\x18\x02 \x01(\tR\bUsername\x12\x14\n" +
 	"\x05price\x18\x03 \x01(\x05R\x05price\x12\x1a\n" +
 	"\bTimeLeft\x18\x04 \x01(\x03R\bTimeLeft\x12\x16\n" +
 	"\x06IsDone\x18\x05 \x01(\bR\x06IsDone2y\n" +
