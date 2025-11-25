@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"sync"
-	"syscall"
 	"time"
 
 	"google.golang.org/grpc"
@@ -100,14 +99,13 @@ func (s *Server) StartAuction() {
 }
 
 func (s *Server) StartReplicaManager(offset int) {
-	time.Sleep(time.Duration(1000*offset) * time.Millisecond)
+	time.Sleep(time.Duration(300*offset) * time.Millisecond)
 	cmd, err := exec.LookPath("./Server")
 	if err != nil {
 		log.Fatalf("Server is not installed.")
 	}
 	attr := &os.ProcAttr{
 		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-		Sys:   &syscall.SysProcAttr{},
 	}
 	process, err := os.StartProcess(cmd, []string{cmd}, attr)
 	if err != nil {
