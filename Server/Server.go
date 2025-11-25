@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"sync"
-	"syscall"
 	"time"
 
 	"google.golang.org/grpc"
@@ -22,7 +21,8 @@ const (
 
 type Server struct {
 	p.UnimplementedAuctionServiceServer
-	ServerPort int
+	ServerPort         int
+	MaxReplicaManagers int
 	//clients map[int]*grpc.ServerStream // måske useless, hvis der ikke er en grund til at holde øje med dem
 	servers        map[int]*p.AuctionService_AuctionStreamClient // holder øje med om servers er nede
 	CurrentAuction Auction
@@ -40,27 +40,29 @@ type BrokerMessage struct {
 }
 
 func main() {
-	s := &Server{ServerPort: 4999}
+	s := &Server{ServerPort: 4999, MaxReplicaManagers: 3}
 
 	grpcServer := grpc.NewServer()
 	var lis net.Listener
 	var err error
 
 	// Dynamically assign services to ports from 5001 to 5003 (3 active nodes, + critical zone on 5000)
-	for i := 5000; i < 5002; i++ {
+	for i := 5000; i < 5001+s.MaxReplicaManagers; i++ {
 		s.ServerPort++
 		lis, err = net.Listen("tcp", fmt.Sprintf(":%d", s.ServerPort))
 		if err != nil {
-			log.Println("Port ", s.ServerPort, " in use, trying next port in line...")
+			//log.Println("Port ", s.ServerPort, " in use, trying next port in line...")
 			continue
 		} else {
 			break
 		}
 	}
-	for i := 5001; i < 5004; i++ {
-		//if int32(i) != s.ServerPort {
-		//s.clients = append(s.clients, int32(i))
-		//}
+	if s.ServerPort == 5000 {
+		for i := 5000; i < 5000+s.MaxReplicaManagers; i++ {
+			go s.StartReplicaManager(i - 4999)
+		}
+	} else {
+		go Shutdown(s.ServerPort)
 	}
 	//log.Println("My list of contacts:", s.clients)
 	log.Printf("Server has started, listening at %v", lis.Addr())
@@ -71,6 +73,12 @@ func main() {
 	if err = grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func Shutdown(port int) {
+	time.Sleep(5 * time.Second)
+	log.Printf("Server %d shutting down...\n", port)
+	os.Exit(0)
 }
 
 func (s *Server) StartAuction() {
@@ -90,10 +98,11 @@ func (s *Server) StartAuction() {
 	}
 }
 
-func (s *Server) StartProcess() {
-	cmd, err := exec.LookPath("sleep")
+func (s *Server) StartReplicaManager(offset int) {
+	time.Sleep(time.Duration(1000*offset) * time.Millisecond)
+	cmd, err := exec.LookPath("./Server")
 	if err != nil {
-		panic(err)
+		log.Fatalf("Server is not installed.")
 	}
 	attr := &os.ProcAttr{
 		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
@@ -101,12 +110,10 @@ func (s *Server) StartProcess() {
 	}
 	process, err := os.StartProcess(cmd, []string{cmd}, attr)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 	log.Printf("Started process %d on port %d\n", process.Pid, s.ServerPort)
-	//fmt.Println(process.Pid)
 	process.Release()
-	//time.Sleep(20 * time.Second)
 	return
 }
 
