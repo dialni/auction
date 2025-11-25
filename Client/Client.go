@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -23,6 +24,11 @@ func ListenForMessages(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 		}
 		log.Println(msg)
 
+		if msg.IsDone {
+			log.Printf("The auction has finished and %s won with a bid of: %d", msg.Username, msg.Price)
+		} else {
+			log.Printf("The auction is still ongoing and %s is the top bidder with a bid of: %d", msg.Username, msg.Price)
+		}
 	}
 }
 
@@ -46,12 +52,13 @@ func main() {
 	in := bufio.NewScanner(os.Stdin)
 	in.Scan()
 	username := in.Text()
-	fmt.Println("Commands available:\n - Result\n - Bid")
+	fmt.Println("Commands available:\n - Bid\n - Result\n - Exit")
 	//Start listening for commands
 	for {
 		in.Scan()
-		switch in.Text() {
-		case "Bid":
+		var command = strings.ToLower(in.Text())
+		switch command {
+		case "bid":
 			log.Println("State your bid!")
 			in.Scan()
 			bid, err := strconv.Atoi(in.Text())
@@ -63,8 +70,12 @@ func main() {
 			log.Println("Sending bid ")
 			break
 
-		case "Result":
+		case "result":
 			Result(stream)
+			break
+
+		case "exit":
+			Exit(stream)
 			break
 		}
 	}
@@ -86,6 +97,17 @@ func Result(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 		Username: "",
 		IsBid:    false,
 		Price:    0,
+	}
+	stream.Send(&msg)
+}
+
+func Exit(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
+	var msg p.Message
+	msg = p.Message{
+		Username: "",
+		IsBid:    false,
+		Price:    0,
+		Kys:      true,
 	}
 	stream.Send(&msg)
 }

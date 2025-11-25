@@ -30,6 +30,7 @@ type Message struct {
 	Username      string                 `protobuf:"bytes,1,opt,name=Username,proto3" json:"Username,omitempty"`
 	IsBid         bool                   `protobuf:"varint,2,opt,name=IsBid,proto3" json:"IsBid,omitempty"` // Is query or is bid
 	Price         int32                  `protobuf:"varint,3,opt,name=Price,proto3" json:"Price,omitempty"`
+	Kys           bool                   `protobuf:"varint,4,opt,name=kys,proto3" json:"kys,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -83,6 +84,13 @@ func (x *Message) GetPrice() int32 {
 		return x.Price
 	}
 	return 0
+}
+
+func (x *Message) GetKys() bool {
+	if x != nil {
+		return x.Kys
+	}
+	return false
 }
 
 type Result struct {
@@ -165,11 +173,12 @@ var File_message_proto protoreflect.FileDescriptor
 
 const file_message_proto_rawDesc = "" +
 	"\n" +
-	"\rmessage.proto\x12\x05proto\"Q\n" +
+	"\rmessage.proto\x12\x05proto\"c\n" +
 	"\aMessage\x12\x1a\n" +
 	"\bUsername\x18\x01 \x01(\tR\bUsername\x12\x14\n" +
 	"\x05IsBid\x18\x02 \x01(\bR\x05IsBid\x12\x14\n" +
-	"\x05Price\x18\x03 \x01(\x05R\x05Price\"\x88\x01\n" +
+	"\x05Price\x18\x03 \x01(\x05R\x05Price\x12\x10\n" +
+	"\x03kys\x18\x04 \x01(\bR\x03kys\"\x88\x01\n" +
 	"\x06Result\x12\x18\n" +
 	"\aSuccess\x18\x01 \x01(\bR\aSuccess\x12\x1a\n" +
 	"\bUsername\x18\x02 \x01(\tR\bUsername\x12\x14\n" +
