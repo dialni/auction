@@ -106,7 +106,6 @@ func (s *Server) StartReplicaManager(offset int) {
 	}
 	attr := &os.ProcAttr{
 		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-		Sys:   &syscall.SysProcAttr{},
 	}
 	process, err := os.StartProcess(cmd, []string{cmd}, attr)
 	if err != nil {
