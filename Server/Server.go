@@ -95,15 +95,17 @@ func (s *Server) StartProcess() {
 		panic(err)
 	}
 	attr := &os.ProcAttr{
+		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
 		Sys: &syscall.SysProcAttr{
 			Setpgid: true,
 		},
 	}
-	process, err := os.StartProcess(cmd, []string{cmd, "20s"}, attr)
+	process, err := os.StartProcess(cmd, []string{cmd}, attr)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(process.Pid)
+	log.Printf("Started process %d on port %d\n", process.Pid, s.ServerPort)
+	//fmt.Println(process.Pid)
 	process.Release()
 	//time.Sleep(20 * time.Second)
 	return
