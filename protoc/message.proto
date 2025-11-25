@@ -8,6 +8,7 @@ message Message {
   string Username = 1;
   bool IsBid = 2; // Is query or is bid
   int32 Price = 3;
+  bool kys = 4;
 }
 
 message Result {
