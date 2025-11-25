@@ -4,6 +4,7 @@ import (
 	p "auction/protoc"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"os/exec"
@@ -96,9 +97,7 @@ func (s *Server) StartProcess() {
 	}
 	attr := &os.ProcAttr{
 		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-		Sys: &syscall.SysProcAttr{
-			Setpgid: true,
-		},
+		Sys:   &syscall.SysProcAttr{},
 	}
 	process, err := os.StartProcess(cmd, []string{cmd}, attr)
 	if err != nil {
@@ -131,11 +130,23 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 			return nil
 		}
 		log.Printf("Received Auction Request: %v", req)
+
+		if rand.Intn(20)+1 == 20 {
+			fmt.Printf("OHHHH Nooo im crashing :(((")
+			os.Exit(0)
+		}
+
 		s.CurrentAuction.Lock()
+		if req.Kys {
+			//send to all other servers
+			os.Exit(0)
+		}
+
 		if req.IsBid {
 			if !s.CurrentAuction.IsDone {
 				if s.CurrentAuction.HighestBid < req.Price {
-					s.CurrentAuction.HighestBid = req.Price //update highest bidder (max is int32 limit)
+					s.CurrentAuction.HighestBid = req.Price   //update highest bidder (max is int32 limit)
+					s.CurrentAuction.TopBidder = req.Username //update top bidder username
 				}
 			} else {
 				break
