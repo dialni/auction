@@ -99,7 +99,7 @@ func (s *Server) StartAuction() {
 }
 
 func (s *Server) StartReplicaManager(offset int) {
-	time.Sleep(time.Duration(1000*offset) * time.Millisecond)
+	time.Sleep(time.Duration(300*offset) * time.Millisecond)
 	cmd, err := exec.LookPath("./Server")
 	if err != nil {
 		log.Fatalf("Server is not installed.")
