@@ -18,6 +18,7 @@ message Result {
   int32 price = 3;
   int64 TimeLeft = 4;
   bool IsDone = 5;
+  bool IsBid = 6;
 }
 
 message SyncMessage{

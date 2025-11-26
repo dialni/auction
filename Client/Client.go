@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -20,20 +21,29 @@ func ListenForMessages(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
-			log.Fatalf("[CLIENT]: Lost connection to server.")
+			log.Println("Lost connection to server, retrying")
+			IsServerDown = true
+			time.Sleep(time.Duration(2500) * time.Millisecond)
+			go StartConnection()
+			return
 		}
-		log.Println(msg)
+		//log.Println(msg)
 
-		if msg.IsDone {
-			log.Printf("The auction has finished and %s won with a bid of: %d", msg.Username, msg.Price)
+		if msg.Success {
+			log.Println("Successfully executed command.")
 		} else {
-			log.Printf("The auction is still ongoing and %s is the top bidder with a bid of: %d", msg.Username, msg.Price)
+			log.Println("Failed to execute command, check auction using Query.")
 		}
 	}
 }
 
-func main() {
-	conn, err := grpc.NewClient(":5000", grpc.WithTransportCredentials(insecure.NewCredentials()))
+var conn *grpc.ClientConn
+var stream grpc.BidiStreamingClient[p.Message, p.Result]
+var err error
+var IsServerDown bool
+
+func StartConnection() {
+	conn, err = grpc.NewClient(":5000", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,13 +51,18 @@ func main() {
 
 	c := p.NewAuctionServiceClient(conn)
 
-	stream, err := c.AuctionStream(context.Background())
+	stream, err = c.AuctionStream(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	IsServerDown = false
 	// Start listening for messages in the background.
 	go ListenForMessages(stream)
+}
+
+func main() {
+
+	StartConnection()
 	fmt.Println("Enter a username: ")
 	in := bufio.NewScanner(os.Stdin)
 	in.Scan()
@@ -84,9 +99,19 @@ func main() {
 func Bid(bid int32, username string, stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 	var msg p.Message
 	msg = p.Message{
-		Username: username,
-		IsBid:    true,
-		Price:    bid,
+		Username:  username,
+		IsBid:     true,
+		Price:     bid,
+		Kys:       false,
+		AuctionID: 0,
+	}
+	// wait until server returns
+	if IsServerDown {
+		for {
+			if !IsServerDown {
+				break
+			}
+		}
 	}
 	stream.Send(&msg)
 }
@@ -94,9 +119,18 @@ func Bid(bid int32, username string, stream grpc.BidiStreamingClient[p.Message, 
 func Result(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 	var msg p.Message
 	msg = p.Message{
-		Username: "",
-		IsBid:    false,
-		Price:    0,
+		Username:  "",
+		IsBid:     false,
+		Price:     0,
+		Kys:       false,
+		AuctionID: 0,
+	} // wait until server returns
+	if IsServerDown {
+		for {
+			if !IsServerDown {
+				break
+			}
+		}
 	}
 	stream.Send(&msg)
 }
@@ -104,10 +138,19 @@ func Result(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 func Exit(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 	var msg p.Message
 	msg = p.Message{
-		Username: "",
-		IsBid:    false,
-		Price:    0,
-		Kys:      true,
+		Username:  "",
+		IsBid:     false,
+		Price:     0,
+		Kys:       true,
+		AuctionID: 0,
+	}
+	// wait until server returns
+	if IsServerDown {
+		for {
+			if !IsServerDown {
+				break
+			}
+		}
 	}
 	stream.Send(&msg)
 }

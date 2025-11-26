@@ -215,6 +215,9 @@ func (s *Server) Sync() {
 				IsJoin:    false,
 			})
 		}
+		if s.kys == true {
+			os.Exit(0)
+		}
 	}
 }
 
@@ -225,9 +228,11 @@ func (s *Server) ListenForMessages(stream grpc.BidiStreamingClient[p.SyncMessage
 
 		if err != nil {
 			log.Printf("[%d]: Server %d lost connection to a client.", os.Getpid(), s.ServerPort)
-			go s.SpawnProcess()
-			time.Sleep(time.Duration(2500) * time.Millisecond)
-			go s.StartNetwork()
+			if s.kys == false {
+				go s.SpawnProcess()
+				time.Sleep(time.Duration(2500) * time.Millisecond)
+				go s.StartNetwork()
+			}
 			return
 		}
 		if msg.IsJoin {
@@ -244,6 +249,14 @@ func (s *Server) ListenForMessages(stream grpc.BidiStreamingClient[p.SyncMessage
 			})
 		}
 
+		// kill request handling
+		if msg.Kys {
+			log.Printf("[%d]: Server %d got kill request.", os.Getpid(), s.ServerPort)
+			s.kys = true
+			time.Sleep(time.Duration(1500) * time.Millisecond)
+			return
+		}
+
 		//log.Printf("%d got msg: %s", s.ServerPort, msg)
 		if s.CurrentAuction.ID < msg.AuctionID || s.CurrentAuction.HighestBid < msg.Price {
 			log.Printf("[%d] Server %d updated their latest auction from sync message: %v", os.Getpid(), s.ServerPort, msg)
@@ -258,6 +271,42 @@ func (s *Server) ListenForMessages(stream grpc.BidiStreamingClient[p.SyncMessage
 			log.Printf("[%d] Server %d has this as latest: %v", os.Getpid(), s.ServerPort, s.CurrentAuction)
 		}
 	}
+}
+
+func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) error {
+	log.Println("New client connected to network")
+	for {
+		msg, err := stream.Recv()
+		if err != nil {
+			log.Println("Client disconnected")
+			return nil
+		}
+		if msg.Kys {
+			s.kys = true
+			log.Printf("[%d]: Auction received a kill signal", os.Getpid())
+			time.Sleep(time.Duration(3000) * time.Millisecond)
+			os.Exit(0)
+		} else if msg.IsBid {
+			log.Printf("[%d]: Auction received a bid request", os.Getpid())
+			if s.CurrentAuction.HighestBid < msg.AuctionID && !s.CurrentAuction.IsDone {
+				s.CurrentAuction.HighestBid = msg.AuctionID
+				s.CurrentAuction.TopBidder = msg.Username
+				stream.Send(&p.Result{
+					Success:  true,
+					Username: "",
+					Price:    0,
+					TimeLeft: 0,
+					IsDone:   false,
+				})
+			} else {
+				stream.Send(&p.Result{Success: false, Username: "", Price: 0, TimeLeft: 0, IsDone: false})
+			}
+		} else if !msg.IsBid {
+			log.Printf("[%d]: Auction received a query request", os.Getpid())
+			stream.Send(&p.Result{Success: true, Username: s.CurrentAuction.TopBidder, Price: s.CurrentAuction.HighestBid, TimeLeft: s.CurrentAuction.TimeLeft, IsDone: s.CurrentAuction.IsDone})
+		}
+	}
+	return nil
 }
 
 func (s *Server) WatcherStream(stream p.AuctionService_WatcherStreamServer) error {
