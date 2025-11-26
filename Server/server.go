@@ -87,9 +87,9 @@ func main() {
 }
 
 func (s *Server) Shutdown() {
-	if s.ServerPort == 5001 {
-		time.Sleep(time.Duration(10000) * time.Millisecond)
-		log.Println("Server is shutting down")
+	if s.ServerPort == 5000 {
+		time.Sleep(time.Duration(12000) * time.Millisecond)
+		log.Println("Primary Server is shutting down")
 		os.Exit(0)
 	}
 }
@@ -195,7 +195,7 @@ func (s *Server) Sync() {
 		if s.ServerPort == 5001 {
 			//log.Println(s.clients)
 		}
-		time.Sleep(time.Duration(1000) * time.Millisecond)
+		time.Sleep(time.Duration(200) * time.Millisecond)
 
 		for _, client := range s.clients {
 			// attempt at recover function if things go wrong in the loop
@@ -292,6 +292,25 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 			if s.CurrentAuction.HighestBid < msg.Price && !s.CurrentAuction.IsDone {
 				s.CurrentAuction.HighestBid = msg.Price
 				s.CurrentAuction.TopBidder = msg.Username
+				for _, client := range s.clients {
+					// attempt at recover function if things go wrong in the loop
+					if r := recover(); r != nil {
+					}
+					go client.Send(&p.SyncMessage{
+						Username:  s.CurrentAuction.TopBidder,
+						Price:     s.CurrentAuction.HighestBid,
+						Kys:       s.kys,
+						AuctionID: s.CurrentAuction.ID,
+						TimeStart: s.CurrentAuction.TimeStart,
+						TimeLeft:  s.CurrentAuction.TimeLeft,
+						IsDone:    s.CurrentAuction.IsDone,
+						IsJoin:    false,
+					})
+				}
+				if s.kys == true {
+					time.Sleep(time.Duration(800) * time.Millisecond)
+					os.Exit(0)
+				}
 				stream.Send(&p.Result{
 					Success:  true,
 					Username: "",
