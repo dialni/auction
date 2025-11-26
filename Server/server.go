@@ -52,7 +52,7 @@ func main() {
 			lis, err = net.Listen("tcp", ":5002")
 			if err != nil {
 				//log.Fatal(err)
-				log.Println("exiting server")
+				//log.Println("exiting server")
 				os.Exit(0)
 			}
 		}
@@ -66,7 +66,7 @@ func main() {
 			TopBidder:  "",
 			HighestBid: 10,
 			TimeStart:  time.Now().Unix(),
-			TimeLeft:   time.Now().Unix() + 30,
+			TimeLeft:   time.Now().Unix() + 100,
 			IsDone:     false,
 		}
 		go s.SpawnProcess()
@@ -114,8 +114,8 @@ func (s *Server) WaitForStart() {
 func (s *Server) RunAuction() {
 	log.Println("Starting Auction")
 	var auc Auction
-	var timeBeforeNextAuc int64 = 5
-	var aucDuration int64 = 5
+	var timeBeforeNextAuc int64 = 30
+	var aucDuration int64 = 100
 	for {
 		s.WaitForStart()
 		s.CurrentAuction.IsDone = false
@@ -157,7 +157,7 @@ func (s *Server) StartNetwork() {
 			log.Fatalf("failed to connect: %v", err)
 		}
 		if s.ServerPort == 5001 {
-			log.Println("sending msg from 5001 2")
+			//log.Println("sending msg from 5001 2")
 		}
 		go s.ListenForMessages(stream)
 		go stream.Send(&p.SyncMessage{
@@ -190,10 +190,10 @@ func (s *Server) SpawnProcess() {
 }
 
 func (s *Server) Sync() {
-	log.Printf("Server is syncing from %d", s.ServerPort)
+	//log.Printf("Server is syncing from %d", s.ServerPort)
 	for {
 		if s.ServerPort == 5001 {
-			log.Println(s.clients)
+			//log.Println(s.clients)
 		}
 		time.Sleep(time.Duration(1000) * time.Millisecond)
 
@@ -202,7 +202,7 @@ func (s *Server) Sync() {
 			if r := recover(); r != nil {
 			}
 			if s.ServerPort == 5001 {
-				log.Println("sending msg from", s.ServerPort)
+				//log.Println("sending msg from", s.ServerPort)
 			}
 			go client.Send(&p.SyncMessage{
 				Username:  s.CurrentAuction.TopBidder,
@@ -216,6 +216,7 @@ func (s *Server) Sync() {
 			})
 		}
 		if s.kys == true {
+			time.Sleep(time.Duration(800) * time.Millisecond)
 			os.Exit(0)
 		}
 	}
@@ -259,7 +260,7 @@ func (s *Server) ListenForMessages(stream grpc.BidiStreamingClient[p.SyncMessage
 
 		//log.Printf("%d got msg: %s", s.ServerPort, msg)
 		if s.CurrentAuction.ID < msg.AuctionID || s.CurrentAuction.HighestBid < msg.Price {
-			log.Printf("[%d] Server %d updated their latest auction from sync message: %v", os.Getpid(), s.ServerPort, msg)
+			//log.Printf("[%d] Server %d updated their latest auction from sync message: %v", os.Getpid(), s.ServerPort, msg)
 			s.CurrentAuction = Auction{
 				ID:         msg.AuctionID,
 				TopBidder:  msg.Username,
@@ -268,7 +269,7 @@ func (s *Server) ListenForMessages(stream grpc.BidiStreamingClient[p.SyncMessage
 				TimeLeft:   msg.TimeLeft,
 				IsDone:     msg.IsDone,
 			}
-			log.Printf("[%d] Server %d has this as latest: %v", os.Getpid(), s.ServerPort, s.CurrentAuction)
+			log.Printf("[%d] Updated Server %d has this as latest: %v", os.Getpid(), s.ServerPort, s.CurrentAuction)
 		}
 	}
 }
@@ -278,7 +279,7 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
-			log.Println("Client disconnected")
+			log.Println("Client disconnected,", err)
 			return nil
 		}
 		if msg.Kys {
@@ -288,8 +289,8 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 			os.Exit(0)
 		} else if msg.IsBid {
 			log.Printf("[%d]: Auction received a bid request", os.Getpid())
-			if s.CurrentAuction.HighestBid < msg.AuctionID && !s.CurrentAuction.IsDone {
-				s.CurrentAuction.HighestBid = msg.AuctionID
+			if s.CurrentAuction.HighestBid < msg.Price && !s.CurrentAuction.IsDone {
+				s.CurrentAuction.HighestBid = msg.Price
 				s.CurrentAuction.TopBidder = msg.Username
 				stream.Send(&p.Result{
 					Success:  true,
@@ -310,10 +311,10 @@ func (s *Server) AuctionStream(stream p.AuctionService_AuctionStreamServer) erro
 }
 
 func (s *Server) WatcherStream(stream p.AuctionService_WatcherStreamServer) error {
-	log.Println("Server received a new stream")
+	//log.Println("Server received a new stream")
 	s.clients = append(s.clients, stream)
 
-	log.Println(s.ServerPort, s.clients)
+	//log.Println(s.ServerPort, s.clients)
 	for {
 		_, err := stream.Recv()
 		if err != nil {

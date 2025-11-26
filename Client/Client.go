@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	p "auction/protoc"
@@ -21,13 +21,13 @@ func ListenForMessages(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
-			log.Println("Lost connection to server, retrying")
+			//log.Println("Lost connection to server, retrying,", err)
 			IsServerDown = true
 			time.Sleep(time.Duration(2500) * time.Millisecond)
 			go StartConnection()
 			return
 		}
-		//log.Println(msg)
+		log.Println(msg)
 
 		if msg.Success {
 			log.Println("Successfully executed command.")
@@ -45,19 +45,31 @@ var IsServerDown bool
 func StartConnection() {
 	conn, err = grpc.NewClient(":5000", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatal(err)
+		IsServerDown = true
+		log.Println("Failed to connect to server, retrying in 2s...")
+		time.Sleep(time.Duration(2) * time.Second)
+		go StartConnection()
+		return
 	}
-	defer conn.Close()
 
 	c := p.NewAuctionServiceClient(conn)
 
 	stream, err = c.AuctionStream(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		IsServerDown = true
+		log.Println("Failed to connect to server, retrying in 3s...")
+		time.Sleep(time.Duration(3) * time.Second)
+		go StartConnection()
+		return
 	}
-	IsServerDown = false
-	// Start listening for messages in the background.
+
 	go ListenForMessages(stream)
+	if IsServerDown {
+		log.Println("Regained connection to server.")
+		IsServerDown = false
+	}
+	// Start listening for messages in the background.
+
 }
 
 func main() {
@@ -67,7 +79,7 @@ func main() {
 	in := bufio.NewScanner(os.Stdin)
 	in.Scan()
 	username := in.Text()
-	fmt.Println("Commands available:\n - Bid\n - Result\n - Exit")
+	fmt.Println("Commands available:\n - Bid\n - Query\n - Exit")
 	//Start listening for commands
 	for {
 		in.Scan()
@@ -81,18 +93,32 @@ func main() {
 				log.Println("Enter a valid bid, use only positive integers.")
 				continue
 			}
+			if IsServerDown {
+				for {
+					time.Sleep(time.Duration(100) * time.Millisecond)
+					if !IsServerDown {
+						log.Println("Server is up again.")
+						break
+					}
+				}
+			}
+			time.Sleep(time.Duration(200) * time.Millisecond)
 			Bid(int32(bid), username, stream)
 			log.Println("Sending bid ")
 			break
 
-		case "result":
-			Result(stream)
+		case "query":
+			Query(stream)
 			break
 
 		case "exit":
 			Exit(stream)
 			break
+		default:
+			fmt.Println("Unknown command, please try again")
+			break
 		}
+
 	}
 }
 
@@ -106,17 +132,12 @@ func Bid(bid int32, username string, stream grpc.BidiStreamingClient[p.Message, 
 		AuctionID: 0,
 	}
 	// wait until server returns
-	if IsServerDown {
-		for {
-			if !IsServerDown {
-				break
-			}
-		}
-	}
+
+	log.Println("bid sent")
 	stream.Send(&msg)
 }
 
-func Result(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
+func Query(stream grpc.BidiStreamingClient[p.Message, p.Result]) {
 	var msg p.Message
 	msg = p.Message{
 		Username:  "",
