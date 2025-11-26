@@ -31,6 +31,7 @@ type Message struct {
 	IsBid         bool                   `protobuf:"varint,2,opt,name=IsBid,proto3" json:"IsBid,omitempty"` // Is query or is bid
 	Price         int32                  `protobuf:"varint,3,opt,name=Price,proto3" json:"Price,omitempty"`
 	Kys           bool                   `protobuf:"varint,4,opt,name=kys,proto3" json:"kys,omitempty"`
+	AuctionID     int32                  `protobuf:"varint,5,opt,name=AuctionID,proto3" json:"AuctionID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -91,6 +92,13 @@ func (x *Message) GetKys() bool {
 		return x.Kys
 	}
 	return false
+}
+
+func (x *Message) GetAuctionID() int32 {
+	if x != nil {
+		return x.AuctionID
+	}
+	return 0
 }
 
 type Result struct {
@@ -169,25 +177,135 @@ func (x *Result) GetIsDone() bool {
 	return false
 }
 
+type SyncMessage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=Username,proto3" json:"Username,omitempty"`
+	Price         int32                  `protobuf:"varint,3,opt,name=Price,proto3" json:"Price,omitempty"`
+	Kys           bool                   `protobuf:"varint,4,opt,name=kys,proto3" json:"kys,omitempty"`
+	AuctionID     int32                  `protobuf:"varint,5,opt,name=AuctionID,proto3" json:"AuctionID,omitempty"`
+	TimeStart     int64                  `protobuf:"varint,6,opt,name=TimeStart,proto3" json:"TimeStart,omitempty"`
+	TimeLeft      int64                  `protobuf:"varint,7,opt,name=TimeLeft,proto3" json:"TimeLeft,omitempty"`
+	IsDone        bool                   `protobuf:"varint,8,opt,name=IsDone,proto3" json:"IsDone,omitempty"`
+	IsJoin        bool                   `protobuf:"varint,9,opt,name=IsJoin,proto3" json:"IsJoin,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SyncMessage) Reset() {
+	*x = SyncMessage{}
+	mi := &file_message_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncMessage) ProtoMessage() {}
+
+func (x *SyncMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_message_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncMessage.ProtoReflect.Descriptor instead.
+func (*SyncMessage) Descriptor() ([]byte, []int) {
+	return file_message_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *SyncMessage) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *SyncMessage) GetPrice() int32 {
+	if x != nil {
+		return x.Price
+	}
+	return 0
+}
+
+func (x *SyncMessage) GetKys() bool {
+	if x != nil {
+		return x.Kys
+	}
+	return false
+}
+
+func (x *SyncMessage) GetAuctionID() int32 {
+	if x != nil {
+		return x.AuctionID
+	}
+	return 0
+}
+
+func (x *SyncMessage) GetTimeStart() int64 {
+	if x != nil {
+		return x.TimeStart
+	}
+	return 0
+}
+
+func (x *SyncMessage) GetTimeLeft() int64 {
+	if x != nil {
+		return x.TimeLeft
+	}
+	return 0
+}
+
+func (x *SyncMessage) GetIsDone() bool {
+	if x != nil {
+		return x.IsDone
+	}
+	return false
+}
+
+func (x *SyncMessage) GetIsJoin() bool {
+	if x != nil {
+		return x.IsJoin
+	}
+	return false
+}
+
 var File_message_proto protoreflect.FileDescriptor
 
 const file_message_proto_rawDesc = "" +
 	"\n" +
-	"\rmessage.proto\x12\x05proto\"c\n" +
+	"\rmessage.proto\x12\x05proto\"\x81\x01\n" +
 	"\aMessage\x12\x1a\n" +
 	"\bUsername\x18\x01 \x01(\tR\bUsername\x12\x14\n" +
 	"\x05IsBid\x18\x02 \x01(\bR\x05IsBid\x12\x14\n" +
 	"\x05Price\x18\x03 \x01(\x05R\x05Price\x12\x10\n" +
-	"\x03kys\x18\x04 \x01(\bR\x03kys\"\x88\x01\n" +
+	"\x03kys\x18\x04 \x01(\bR\x03kys\x12\x1c\n" +
+	"\tAuctionID\x18\x05 \x01(\x05R\tAuctionID\"\x88\x01\n" +
 	"\x06Result\x12\x18\n" +
 	"\aSuccess\x18\x01 \x01(\bR\aSuccess\x12\x1a\n" +
 	"\bUsername\x18\x02 \x01(\tR\bUsername\x12\x14\n" +
 	"\x05price\x18\x03 \x01(\x05R\x05price\x12\x1a\n" +
 	"\bTimeLeft\x18\x04 \x01(\x03R\bTimeLeft\x12\x16\n" +
-	"\x06IsDone\x18\x05 \x01(\bR\x06IsDone2y\n" +
+	"\x06IsDone\x18\x05 \x01(\bR\x06IsDone\"\xd9\x01\n" +
+	"\vSyncMessage\x12\x1a\n" +
+	"\bUsername\x18\x01 \x01(\tR\bUsername\x12\x14\n" +
+	"\x05Price\x18\x03 \x01(\x05R\x05Price\x12\x10\n" +
+	"\x03kys\x18\x04 \x01(\bR\x03kys\x12\x1c\n" +
+	"\tAuctionID\x18\x05 \x01(\x05R\tAuctionID\x12\x1c\n" +
+	"\tTimeStart\x18\x06 \x01(\x03R\tTimeStart\x12\x1a\n" +
+	"\bTimeLeft\x18\a \x01(\x03R\bTimeLeft\x12\x16\n" +
+	"\x06IsDone\x18\b \x01(\bR\x06IsDone\x12\x16\n" +
+	"\x06IsJoin\x18\t \x01(\bR\x06IsJoin2\x81\x01\n" +
 	"\x0eAuctionService\x122\n" +
-	"\rAuctionStream\x12\x0e.proto.Message\x1a\r.proto.Result(\x010\x01\x123\n" +
-	"\rWatcherStream\x12\x0e.proto.Message\x1a\x0e.proto.Message(\x010\x01B\x03Z\x01.b\x06proto3"
+	"\rAuctionStream\x12\x0e.proto.Message\x1a\r.proto.Result(\x010\x01\x12;\n" +
+	"\rWatcherStream\x12\x12.proto.SyncMessage\x1a\x12.proto.SyncMessage(\x010\x01B\x03Z\x01.b\x06proto3"
 
 var (
 	file_message_proto_rawDescOnce sync.Once
@@ -201,16 +319,17 @@ func file_message_proto_rawDescGZIP() []byte {
 	return file_message_proto_rawDescData
 }
 
-var file_message_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_message_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_message_proto_goTypes = []any{
-	(*Message)(nil), // 0: proto.Message
-	(*Result)(nil),  // 1: proto.Result
+	(*Message)(nil),     // 0: proto.Message
+	(*Result)(nil),      // 1: proto.Result
+	(*SyncMessage)(nil), // 2: proto.SyncMessage
 }
 var file_message_proto_depIdxs = []int32{
 	0, // 0: proto.AuctionService.AuctionStream:input_type -> proto.Message
-	0, // 1: proto.AuctionService.WatcherStream:input_type -> proto.Message
+	2, // 1: proto.AuctionService.WatcherStream:input_type -> proto.SyncMessage
 	1, // 2: proto.AuctionService.AuctionStream:output_type -> proto.Result
-	0, // 3: proto.AuctionService.WatcherStream:output_type -> proto.Message
+	2, // 3: proto.AuctionService.WatcherStream:output_type -> proto.SyncMessage
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -229,7 +348,7 @@ func file_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_message_proto_rawDesc), len(file_message_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

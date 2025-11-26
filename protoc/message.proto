@@ -9,6 +9,7 @@ message Message {
   bool IsBid = 2; // Is query or is bid
   int32 Price = 3;
   bool kys = 4;
+  int32 AuctionID = 5;
 }
 
 message Result {
@@ -19,7 +20,18 @@ message Result {
   bool IsDone = 5;
 }
 
+message SyncMessage{
+  string Username = 1;
+  int32 Price = 3;
+  bool kys = 4;
+  int32 AuctionID = 5;
+  int64 TimeStart = 6;
+  int64 TimeLeft = 7;
+  bool IsDone = 8;
+  bool IsJoin = 9;
+}
+
 service AuctionService{
   rpc AuctionStream(stream Message) returns (stream Result);
-  rpc WatcherStream(stream Message) returns (stream Message);
+  rpc WatcherStream(stream SyncMessage) returns (stream SyncMessage);
 }
